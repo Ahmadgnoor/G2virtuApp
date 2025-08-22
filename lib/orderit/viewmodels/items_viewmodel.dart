@@ -97,8 +97,8 @@ class ItemsViewModel extends BaseViewModel {
     }
     quantityControllerFocusNodeCatalogueView.unfocus();
     for (var element in quantityFocusNodeList) {
-        element.focusNode?.unfocus();
-      }
+      element.focusNode?.unfocus();
+    }
     notifyListeners();
   }
 
@@ -792,10 +792,10 @@ class ItemsViewModel extends BaseViewModel {
       // update list
       var newList = <ItemsModel>[];
       for (var listItem in listItemFiltered) {
-          if (!newList.contains(listItem)) {
-            newList.add(listItem);
-          }
+        if (!newList.contains(listItem)) {
+          newList.add(listItem);
         }
+      }
       itemList = newList;
     }
     // display original list when none of tag is selected
@@ -917,7 +917,7 @@ class ItemsViewModel extends BaseViewModel {
           }
         }
       }
-        }
+    }
     return 0;
   }
 
@@ -930,7 +930,7 @@ class ItemsViewModel extends BaseViewModel {
       if (cart.cartList != null) {
         cartItems = cart.cartList!;
       }
-    
+
       notifyListeners();
     }
   }
@@ -943,7 +943,7 @@ class ItemsViewModel extends BaseViewModel {
       if (cart.cartList != null) {
         cartItems = cart.cartList!;
       }
-          notifyListeners();
+      notifyListeners();
     }
   }
 

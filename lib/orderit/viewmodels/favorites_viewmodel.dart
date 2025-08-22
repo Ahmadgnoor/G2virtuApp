@@ -239,7 +239,9 @@ class FavoritesViewModel extends BaseViewModel {
       if (cart.cartList != null) {
         cartItems = cart.cartList!;
       }
-          notifyListeners();
+      notifyListeners();
     }
   }
+
+  void setupPriceList() {}
 }

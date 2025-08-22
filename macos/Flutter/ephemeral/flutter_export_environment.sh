@@ -1,11 +1,12 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\dev\flutter"
-export "FLUTTER_APPLICATION_PATH=C:\Users\USER\Downloads\Compressed\g2virtu_orders_b2b\g2virtu_orders_b2b"
+export "FLUTTER_ROOT=E:\src\flutter"
+export "FLUTTER_APPLICATION_PATH=E:\andiod projects\ans\g2virtu_orders_b2b"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_BUILD_DIR=build"
 export "FLUTTER_BUILD_NAME=2.0.0"
 export "FLUTTER_BUILD_NUMBER=5"
+export "FLUTTER_CLI_BUILD_MODE=debug"
 export "DART_OBFUSCATION=false"
 export "TRACK_WIDGET_CREATION=true"
 export "TREE_SHAKE_ICONS=false"

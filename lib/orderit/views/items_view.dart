@@ -68,74 +68,77 @@ class ItemsView extends StatelessWidget {
             ));
     return BaseView<ItemsViewModel>(
       onModelReady: (model) async {
-        // get user
-        model.getUser();
-        await model.itemGroupListWithoutReturn(context);
-        var connectivityStatus =
-            Provider.of<ConnectivityStatus>(context, listen: false);
-        // item category code
-        // fetch configurations
-        await model.getFavorites();
-        // cache doctypes
-        await model.checkDoctypeCache();
-        await model.cachePriceListAndItemPrice(7, context);
-        await model.getStockActualQtyList();
-        await model.getItemPrices();
-        model.getConnectivityStatus(context);
-        var isUserCustomer = locator.get<StorageService>().isUserCustomer;
-        var user = locator.get<UserService>().getUser();
-        // if user is customer get customer from email
-        if (isUserCustomer) {
-          await model.getCustomerFromEmail(user.email!);
-          // set customer pricelist
-          model.setPriceList();
-        }
-        // if user is not customer get customer from customer name which is passed from booking order on behalf of customer ie enter customer screen
-        else {
-          await model.getCustomerFromCustomerName(storageService.customer);
-          // set customer pricelist
-          model.setPriceList();
-        }
-        // if customer default pricelist is present
-        if (model.customer.defaultPriceList != null) {
-          // if (model.isUserCustomer && model.customer.defaultPriceList != null) {
-          // set customer pricelist
-          model.setPriceList();
-        }
-        // if customer default pricelist is not present show snackbar
-        else {
-          showSnackBar('Price List not found', context);
-        }
-        // store catalog data to a map for later using that data at another places i.e while placing sales order ,quotation etc
-        await model.storeCatalogModelData();
-        // setup cart items to cart page
-        await locator.get<CartPageViewModel>().setCartItems();
-        // init quantity controllers
-        await locator.get<CartPageViewModel>().initQuantityController();
-        await model.getCartItems();
+        try {
+          // get user
+          model.getUser();
+          await model.itemGroupListWithoutReturn(context);
+          var connectivityStatus =
+              Provider.of<ConnectivityStatus>(context, listen: false);
+          // fetch configurations
+          await model.getFavorites();
+          // cache doctypes
+          await model.checkDoctypeCache();
 
-        if (itemGroup != null) {
-          model.setCategorySelected(itemGroup, '');
-          await model.getItemGroupData(itemGroup!, context);
-        } else if (itemGroup == null) {}
-        await model.getProducts();
-        // if item group is clicked then fetch tags associated with that item group
-        if (itemGroup != null) {
-          // await model.getTagsFromItemGroup(context, itemGroup);
-          model.init();
-        } else {
-          // await model.getTags(context);
-        }
+          var isUserCustomer = locator.get<StorageService>().isUserCustomer;
+          var user = locator.get<UserService>().getUser();
 
-        if (itemGroup != null) {
-          // set catalogue view index
-          if (model.itemList.isNotEmpty) {
+          // Get customer data FIRST - before any price-related operations
+          if (isUserCustomer) {
+            await model.getCustomerFromEmail(user.email!);
+          } else {
+            await model.getCustomerFromCustomerName(storageService.customer);
+          }
+
+          // Check if customer data was loaded successfully
+          if (model.customer == null) {
+            showSnackBar('Customer not found', context);
+            return;
+          }
+
+          // SET PRICE LIST BEFORE fetching prices and items
+          if (model.customer.defaultPriceList != null) {
+            model.setPriceList();
+          } else {
+            // Manually set a default price list in storage service
+            locator.get<StorageService>().priceList =
+                'Standard Selling'; // Change to your default price list name
+            showSnackBar('Using default price list', context);
+          }
+
+          // NOW fetch price-related data AFTER setting price list
+          await model.cachePriceListAndItemPrice(7, context);
+          await model.getStockActualQtyList();
+          await model
+              .getItemPrices(); // This needs the price list to be set first
+          model.getConnectivityStatus(context);
+
+          // Continue with other operations
+          await model.storeCatalogModelData();
+          await locator.get<CartPageViewModel>().setCartItems();
+          await locator.get<CartPageViewModel>().initQuantityController();
+          await model.getCartItems();
+
+          if (itemGroup != null) {
+            model.setCategorySelected(itemGroup, '');
+            await model.getItemGroupData(itemGroup!, context);
+          }
+
+          // Get products AFTER prices are loaded
+          await model.getProducts();
+
+          if (itemGroup != null) {
+            model.init();
+          }
+
+          if (itemGroup != null && model.itemList.isNotEmpty) {
             model.setCatalogItemIndex(0);
           }
+
+          await model.initQuantityController();
+          model.initCarouselData();
+        } catch (e) {
+          showSnackBar('Error loading items: $e', context);
         }
-        // initialize quantity controller
-        await model.initQuantityController();
-        model.initCarouselData();
       },
       builder: (context, model, child) {
         return Scaffold(

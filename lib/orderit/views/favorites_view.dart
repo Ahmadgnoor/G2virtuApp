@@ -28,6 +28,7 @@ class FavoritesView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BaseView<FavoritesViewModel>(
       onModelReady: (model) async {
+        model.setupPriceList();
         await model.getFavoritesItems();
         await model.getCartItems();
         await model.initQuantityController();
@@ -73,23 +74,24 @@ class FavoritesView extends StatelessWidget {
     );
   }
 
-  Widget incDecBtn(
-      {required FavoritesViewModel model,
-      required double? width,
-      required double? buttonDimension,
-      required TextStyle? priceStyle,
-      required TextStyle? itemNameStyle,
-      required ItemsModel item,
-      required BuildContext context,
-      required int itemQuantity,
-      required double? stockActualQty,
-      required int index}) {
+  Widget incDecBtn({
+    required FavoritesViewModel model,
+    required double? width,
+    required double? buttonDimension,
+    required TextStyle? priceStyle,
+    required TextStyle? itemNameStyle,
+    required ItemsModel item,
+    required BuildContext context,
+    required int itemQuantity,
+    required double? stockActualQty,
+    required int index,
+  }) {
     var cartPageViewModel = locator.get<CartPageViewModel>();
     var iconSize = displayWidth(context) < 600 ? 20.0 : 32.0;
 
     return Skeleton.ignore(
       child: SizedBox(
-        width: displayWidth(context) < 600 ? 115 : 150,
+        width: displayWidth(context) < 600 ? 100 : 130, // REDUCED from 115/150
         child: SizedBox(
           height: displayWidth(context) < 600 ? 37 : 42,
           child: itemQuantity == 0
@@ -99,6 +101,9 @@ class FavoritesView extends StatelessWidget {
                         'Out of Stock',
                         style: TextStyle(
                           color: CustomTheme.dangerColor,
+                          fontSize: displayWidth(context) < 600
+                              ? 10
+                              : 12, // Smaller font
                         ),
                       ),
                     )
@@ -114,6 +119,11 @@ class FavoritesView extends StatelessWidget {
                               ),
                               borderRadius: Corners.lgBorder),
                         ),
+                        padding: WidgetStatePropertyAll(EdgeInsets.symmetric(
+                          horizontal: displayWidth(context) < 600
+                              ? 4
+                              : 8, // Reduced padding
+                        )),
                       ),
                       onPressed: () async {
                         await model.add(item, context);
@@ -139,20 +149,14 @@ class FavoritesView extends StatelessWidget {
                           await model.refresh();
                         }
                       },
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: displayWidth(context) < 600
-                                ? Sizes.paddingWidget(context) * 2
-                                : Sizes.paddingWidget(context)),
-                        child: Text(
-                          Strings.add,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.secondary,
-                              ),
-                        ),
+                      child: Text(
+                        Strings.add,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: displayWidth(context) < 600
+                                  ? 12
+                                  : 14, // Smaller font
+                            ),
                       ),
                     )
               : (model.isQuantityControllerInitialized
@@ -171,8 +175,11 @@ class FavoritesView extends StatelessWidget {
                           cartControllerButton(
                               iconColor:
                                   Theme.of(context).colorScheme.onSecondary,
-                              iconSize: iconSize,
-                              buttonDimension: buttonDimension,
+                              iconSize:
+                                  iconSize * 0.9, // Slightly smaller icons
+                              buttonDimension: buttonDimension != null
+                                  ? buttonDimension! * 0.9
+                                  : 27,
                               icon: Icons.remove,
                               onPressed: () async {
                                 await decrementController(
@@ -186,16 +193,12 @@ class FavoritesView extends StatelessWidget {
                                   controller: model
                                       .quantityControllerList[index].controller,
                                   onChanged: (String value) async {
-                                    // value empty
                                     if (value.isEmpty) {
-                                    }
-                                    // not empty
-                                    else {
+                                    } else {
                                       if (int.parse(value) != 0) {
                                         await model.setQty(
                                             index, value, context);
                                       }
-                                      // if set to 0 then remove from cart
                                       if (int.parse(value) == 0) {
                                         var cartItemObj = cartPageViewModel
                                             .items
@@ -217,8 +220,10 @@ class FavoritesView extends StatelessWidget {
                           cartControllerButton(
                             iconColor:
                                 Theme.of(context).colorScheme.onSecondary,
-                            iconSize: iconSize,
-                            buttonDimension: buttonDimension,
+                            iconSize: iconSize * 0.9, // Slightly smaller icons
+                            buttonDimension: buttonDimension != null
+                                ? buttonDimension! * 0.9
+                                : 27,
                             icon: Icons.add,
                             onPressed: () async {
                               await incrementController(item, model, context);
@@ -376,51 +381,55 @@ class FavoritesView extends StatelessWidget {
           horizontal: Sizes.paddingWidget(context),
           vertical: Sizes.smallPaddingWidget(context)),
       child: ListTile(
-        contentPadding:
-            EdgeInsets.symmetric(horizontal: Sizes.smallPaddingWidget(context)),
-        leading: Row(
-          children: [
-            SizedBox(width: Sizes.smallPaddingWidget(context)),
-            GestureDetector(
-              child: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? Colors.red : null,
+        contentPadding: EdgeInsets.symmetric(
+            horizontal: Sizes.smallPaddingWidget(context),
+            vertical: Sizes.smallPaddingWidget(context)),
+        // FIXED: Use a SizedBox to constrain the leading width
+        leading: SizedBox(
+          width: 80, // Constrained width to prevent overflow
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              GestureDetector(
+                child: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : null,
+                  size: 24,
+                ),
+                onTap: () => model.toggleFavorite(item.itemCode!, context),
               ),
-              onTap: () => model.toggleFavorite(item.itemCode!, context),
-            ),
-            SizedBox(width: Sizes.smallPaddingWidget(context)),
-            ClipRRect(
-              borderRadius: Corners.lgBorder,
-              child: item.imageUrl == null || item.imageUrl == ''
-                  ? Container(
-                      width: imgDimension,
-                      height: imgDimension,
-                      decoration: const BoxDecoration(
-                        borderRadius: Corners.xxlBorder,
-                        image: DecorationImage(
-                          image: AssetImage(
-                            Images.imageNotFound,
+              SizedBox(width: Sizes.smallPaddingWidget(context)),
+              ClipRRect(
+                borderRadius: Corners.lgBorder,
+                child: item.imageUrl == null || item.imageUrl == ''
+                    ? Container(
+                        width: imgDimension,
+                        height: imgDimension,
+                        decoration: const BoxDecoration(
+                          borderRadius: Corners.xxlBorder,
+                          image: DecorationImage(
+                            image: AssetImage(
+                              Images.imageNotFound,
+                            ),
+                            fit: BoxFit.cover,
                           ),
-                          fit: BoxFit.cover,
                         ),
-                      ),
-                    )
-                  : item.imageUrl == null
-                      ? Container()
-                      : image_widget.imageWidget(
-                          '${locator.get<StorageService>().apiUrl}${item.imageUrl}',
-                          imgDimension,
-                          imgDimension,
-                          fit: BoxFit.fill),
-            ),
-          ],
+                      )
+                    : image_widget.imageWidget(
+                        '${locator.get<StorageService>().apiUrl}${item.imageUrl}',
+                        imgDimension,
+                        imgDimension,
+                        fit: BoxFit.fill),
+              ),
+            ],
+          ),
         ),
-        title: Text(item.itemName ?? ''),
+        title: Text(item.itemName ?? '', overflow: TextOverflow.ellipsis),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(item.itemCode ?? ''),
-            Text(item.itemGroup ?? ''),
+            Text(item.itemCode ?? '', overflow: TextOverflow.ellipsis),
+            Text(item.itemGroup ?? '', overflow: TextOverflow.ellipsis),
           ],
         ),
         onTap: () async {
