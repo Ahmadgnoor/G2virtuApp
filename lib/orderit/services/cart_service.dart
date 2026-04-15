@@ -7,12 +7,11 @@ import 'package:orderit/route/routing_constants.dart';
 import 'package:orderit/common/services/navigation_service.dart';
 import 'package:orderit/util/apiurls.dart';
 import 'package:orderit/util/dio_helper.dart';
-import 'package:flutter/material.dart';
 
 class CartService {
   // create sales order
-  Future<bool> postSalesOrder(
-      SalesOrderModel salesOrderModel, BuildContext context) async {
+  Future<bool> postSalesOrder(SalesOrderModel salesOrderModel,
+      {bool isOffline = false}) async {
     final url = salesOrderUrl();
     try {
       final response =
@@ -20,10 +19,12 @@ class CartService {
       if (response?.statusCode == 200) {
         var data = response?.data['data'];
         // navigate to success screen
-        await locator.get<NavigationService>().navigateTo(
-          successViewRoute,
-          arguments: [data['doctype'], data['name']],
-        );
+        if (!isOffline) {
+          await locator.get<NavigationService>().navigateTo(
+            successViewRoute,
+            arguments: [data['doctype'], data['name']],
+          );
+        }
         return true;
       }
       return false;

@@ -42,15 +42,18 @@ Future<void> showErrorToast(Response<dynamic>? response) async {
   }
 }
 
-ToastFuture flutterStyledToast(BuildContext context, String message, Color backgroundColor,
+ToastFuture flutterStyledToast(
+    BuildContext? context, String message, Color backgroundColor,
     {TextStyle? textStyle, StyledToastPosition? position}) {
   return showToast(message,
       backgroundColor: backgroundColor,
       context: context,
       textStyle: textStyle ??
-          Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+          (context != null
+              ? Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  )
+              : null),
       animation: StyledToastAnimation.slideFromTop,
       // reverseAnimation: StyledToastAnimation.slideToTop,
       position: position ?? StyledToastPosition.bottom,

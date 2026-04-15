@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:orderit/common/models/item_price_model.dart';
 import 'package:orderit/common/services/fetch_cached_doctype_service.dart';
 import 'package:orderit/common/services/storage_service.dart';
@@ -16,6 +17,7 @@ import 'package:orderit/orderit/services/cart_service.dart';
 import 'package:orderit/common/widgets/custom_toast.dart';
 import 'package:orderit/common/services/common_service.dart';
 import 'package:orderit/common/services/offline_storage_service.dart';
+import 'package:orderit/orderit/services/offline_order_service.dart';
 import 'package:orderit/util/enums.dart';
 import 'package:orderit/base_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -29,8 +31,7 @@ class CartPageViewModel extends BaseViewModel {
   bool isVideo = false;
   List<TextEditingController> quantityControllerList =
       <TextEditingController>[];
-  List<FocusNode> quantityControllerFocusNodeList =
-      <FocusNode>[];
+  List<FocusNode> quantityControllerFocusNodeList = <FocusNode>[];
   List<TextEditingController> quantityControllerListRec =
       <TextEditingController>[];
   String? customer;
@@ -48,8 +49,8 @@ class CartPageViewModel extends BaseViewModel {
       currentFocus.unfocus();
     }
     for (var element in quantityControllerFocusNodeList) {
-        element.unfocus();
-      }
+      element.unfocus();
+    }
     notifyListeners();
   }
 
@@ -357,7 +358,7 @@ class CartPageViewModel extends BaseViewModel {
       if (cart.cartList != null) {
         items = cart.cartList!;
       }
-        }
+    }
     notifyListeners();
     setState(ViewState.idle);
   }
@@ -375,7 +376,7 @@ class CartPageViewModel extends BaseViewModel {
       } else {
         return [];
       }
-        }
+    }
     return [];
   }
 
@@ -624,13 +625,29 @@ class CartPageViewModel extends BaseViewModel {
       priceList: priceListName,
     );
 
-    var result = await locator
-        .get<CartService>()
-        .postSalesOrder(salesOrderModel, context);
-    if (result) {
-      //Clear cart after sales order saved
+    var connectivity = await Connectivity().checkConnectivity();
+
+    if (connectivity.contains(ConnectivityResult.none)) {
+      await locator
+          .get<OfflineOrderService>()
+          .saveOfflineOrder(salesOrderModel);
+
+      await flutterSimpleToast(
+        Colors.black,
+        const Color(0xFF67DE81),
+        "Order saved offline. Will sync automatically.",
+      );
+
       removeAll();
+    } else {
+      var result =
+          await locator.get<CartService>().postSalesOrder(salesOrderModel);
+      if (result) {
+        //Clear cart after sales order saved
+        removeAll();
+      }
     }
+
     setState(ViewState.idle);
     notifyListeners();
   }

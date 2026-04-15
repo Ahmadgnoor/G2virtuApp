@@ -7,6 +7,7 @@ import 'package:orderit/common/viewmodels/error_log_list_viewmodel.dart';
 import 'package:orderit/common/viewmodels/profile_viewmodel.dart';
 import 'package:orderit/common/views/login_view.dart';
 import 'package:orderit/orderit/services/cart_service.dart';
+import 'package:orderit/orderit/services/offline_order_service.dart';
 import 'package:orderit/orderit/services/orderit_api_service.dart';
 import 'package:orderit/orderit/viewmodels/cart_page_viewmodel.dart';
 import 'package:orderit/orderit/viewmodels/draft_detail_viewmodel.dart';
@@ -53,6 +54,8 @@ Future setUpLocator() async {
   locator.registerLazySingleton<LogoutService>(() => LogoutService());
   locator.registerLazySingleton<NavigationService>(() => NavigationService());
   locator.registerLazySingleton<OfflineStorage>(() => OfflineStorage());
+  locator
+      .registerLazySingleton<OfflineOrderService>(() => OfflineOrderService());
   if (instance != null) {
     locator.registerSingleton<StorageService>(instance);
   }

@@ -29,6 +29,6 @@ class OfflineStorage {
   Future remove(String secondaryKey) async {
     var k = secondaryKey;
     var keyHash = generateKeyHash(k);
-    await storage.delete(keyHash);
+    await storage.delete(secondaryKey);
   }
 }

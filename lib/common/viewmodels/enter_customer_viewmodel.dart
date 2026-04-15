@@ -28,15 +28,18 @@ class EnterCustomerViewModel extends BaseViewModel {
   bool isCustomersLoading = false;
 
   Future<int?> checkSessionExpired() async {
-    setState(ViewState.busy);
+    setStateWithPostFrameCallback(ViewState.busy);
     var statusCode = await locator.get<CommonService>().checkSessionExpired();
-    setState(ViewState.idle);
+    setStateWithPostFrameCallback(ViewState.idle);
+
     return statusCode;
   }
 
   void getUser() {
     user = locator.get<UserService>().getUser();
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   void init() {

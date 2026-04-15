@@ -6,6 +6,7 @@ import 'package:orderit/app_viewmodel.dart';
 import 'package:orderit/lifecycle_manager.dart';
 import 'package:orderit/common/services/dialog_manager.dart';
 import 'package:orderit/config/theme_model.dart';
+import 'package:orderit/orderit/services/offline_order_service.dart';
 import 'package:orderit/route/routing_constants.dart';
 import 'package:orderit/common/services/connectivity_service.dart';
 import 'package:orderit/common/services/navigation_service.dart';
@@ -100,39 +101,51 @@ class _AppState extends State<App> {
                   create: (_) => ThemeModel(),
                 ),
               ],
-              child: Consumer(
-                builder: (context, ThemeModel themeNotifier, _) {
-                  bool? isDark = themeNotifier.isDark;
+              child: Consumer<ConnectivityStatus>(
+                builder: (context, status, child) {
+                  if (status != ConnectivityStatus.offline) {
+                    Future.microtask(() {
+                      locator.get<OfflineOrderService>().syncOfflineOrders();
+                    });
+                  }
 
-                  var theme = isDark
-                      ? CustomTheme.darkTheme(
-                          primaryColor: CustomTheme.primaryColorDark)
-                      : CustomTheme.lightTheme(
-                          primaryColor: CustomTheme.primaryColorLight);
-                  return MaterialApp(
-                    title: 'G2Virtu Orders B2B',
-                    onGenerateRoute: router.generateRoute,
-                    navigatorKey: locator.get<NavigationService>().navigatorKey,
-                    builder: (context, child) => Navigator(
-                      onGenerateRoute: (settings) => MaterialPageRoute(
-                        builder: (context) => DialogManager(
-                          child: MediaQuery(
-                              data: MediaQuery.of(context)
-                                  .copyWith(textScaler: TextScaler.linear(1.0)),
-                              child: child ?? const SizedBox.shrink()),
+                  return child!;
+                },
+                child: Consumer(
+                  builder: (context, ThemeModel themeNotifier, _) {
+                    bool? isDark = themeNotifier.isDark;
+
+                    var theme = isDark
+                        ? CustomTheme.darkTheme(
+                            primaryColor: CustomTheme.primaryColorDark)
+                        : CustomTheme.lightTheme(
+                            primaryColor: CustomTheme.primaryColorLight);
+                    return MaterialApp(
+                      title: 'G2Virtu Orders B2B',
+                      onGenerateRoute: router.generateRoute,
+                      navigatorKey:
+                          locator.get<NavigationService>().navigatorKey,
+                      builder: (context, child) => Navigator(
+                        onGenerateRoute: (settings) => MaterialPageRoute(
+                          builder: (context) => DialogManager(
+                            child: MediaQuery(
+                                data: MediaQuery.of(context).copyWith(
+                                    textScaler: TextScaler.linear(1.0)),
+                                child: child ?? const SizedBox.shrink()),
+                          ),
                         ),
                       ),
-                    ),
-                    localizationsDelegates: const [
-                      FormBuilderLocalizations.delegate,
-                    ],
-                    initialRoute: (widget.login == true
-                        ? splashViewRoute
-                        : (loginViewRoute)),
-                    debugShowCheckedModeBanner: false,
-                    theme: theme,
-                  );
-                },
+                      localizationsDelegates: const [
+                        FormBuilderLocalizations.delegate,
+                      ],
+                      initialRoute: (widget.login == true
+                          ? splashViewRoute
+                          : (loginViewRoute)),
+                      debugShowCheckedModeBanner: false,
+                      theme: theme,
+                    );
+                  },
+                ),
               ),
             ),
           ),
